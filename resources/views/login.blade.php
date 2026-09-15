@@ -58,8 +58,7 @@
                         <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Puesto de Trabajo</label>
                         <div class="grid grid-cols-2 gap-4">
                             <!-- Opción Mesero -->
-                            <div onclick="seleccionarPuesto('mesero')" id="card-mesero" class="cursor-pointer border-2 border-blue-600 bg-white p-4 rounded-2xl shadow-sm transition relative">
-                                <div class="w-3 h-3 rounded-full bg-blue-600 absolute top-3 right-3" id="dot-mesero"></div>
+                            <div onclick="seleccionarPuesto('mesero')" id="card-mesero" class="cursor-pointer border-2 border-blue-600 bg-white p-4 rounded-2xl shadow-sm transition relative">   
                                 <div class="bg-blue-100 text-blue-600 w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg mb-3">🪑</div>
                                 <h4 class="font-bold text-slate-800 text-sm">Mesero</h4>
                                 <p class="text-xs text-slate-400 mt-1">Toma pedidos desde salón, envía comandas y gestiona mesas en tiempo real.</p>
