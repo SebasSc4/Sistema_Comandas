@@ -3,114 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - ComandaPro</title>
-    <!-- Esta línea es propia de Laravel para cargar Tailwind CSS -->
+    <title>Iniciar sesión | ComandaPro</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-slate-900 min-h-screen flex items-center justify-center p-4">
-
-    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-5xl overflow-hidden grid grid-cols-1 md:grid-cols-2 min-h-[600px]">
-        
-        <!-- Panel Izquierdo Oscuro -->
-        <div class="relative bg-slate-950 p-10 text-white flex flex-col justify-between overflow-hidden">
-            <div class="absolute inset-0 opacity-20 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=1000');"></div>
-            
-            <div class="relative z-10 flex items-center space-x-3">
-                <div class="bg-blue-600 p-2 rounded-xl text-white font-bold text-xl">🍳</div>
-                <span class="text-xl font-extrabold tracking-tight">ComandaPro</span>
+<body class="min-h-screen grid md:grid-cols-2">
+    <section class="hidden md:flex flex-col justify-between bg-panel border-r border-line p-12">
+        <span class="font-display text-2xl font-bold">ComandaPro</span>
+        <div class="max-w-sm">
+            <h2 class="text-5xl font-bold leading-none mb-4">Del salón a la cocina, sin papelitos perdidos.</h2>
+            <p class="text-humo mb-10">Meseros y administración trabajando sobre la misma cuenta.</p>
+            <div class="ticket p-5">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="num text-2xl font-semibold">Mesa 12 · #302</span>
+                    <span class="chip" data-estado="ocupada">En cocina</span>
+                </div>
+                <p class="font-medium">3x Tacos de Ribeye</p>
+                <p class="text-humo text-sm">Sin cebolla · enviada hace 2 min</p>
             </div>
+        </div>
+        <span class="text-xs text-humo">© 2026 ComandaPro</span>
+    </section>
 
-            <div class="relative z-10 space-y-4 my-auto">
-                <h2 class="text-3xl font-extrabold leading-tight">Control total de tu cocina<br><span class="text-blue-500">y salón</span></h2>
-                <p class="text-slate-400 text-sm">La plataforma que unifica meseros, cocina y administración para acelerar el servicio y optimizar tus ingresos.</p>
-                
-                <div class="bg-slate-900/80 backdrop-blur-md p-4 rounded-2xl border border-slate-800 shadow-xl max-w-sm">
-                    <div class="flex justify-between items-center text-xs text-slate-400 mb-1">
-                        <span class="flex items-center space-x-1 text-emerald-400 font-semibold">
-                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                            <span>SERVICIO ACTIVO</span>
-                        </span>
-                        <span>Mesa 12 • Cmd #302</span>
-                    </div>
-                    <p class="font-bold text-sm text-white">3x Tacos de Ribeye • Sin cebolla</p>
-                    <p class="text-xs text-slate-400 mt-1">Enviado a Cocina • Hace 2 min</p>
+    <section class="relative flex items-center justify-center p-8">
+        <span id="puesto-titulo" class="puesto-titulo" aria-hidden="true"></span>
+
+        <form action="{{ route('login.post') }}" method="POST" class="w-full max-w-sm space-y-6">
+            @csrf
+            <div>
+                <h1 class="text-4xl font-semibold">Iniciar sesión</h1>
+                <p class="text-humo text-sm mt-1">Elige tu puesto para continuar.</p>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                @foreach (['mesero' => ['Mesero', 'Toma pedidos y gestiona sus mesas'], 'admin' => ['Administrador', 'Menú, mesas, ventas y usuarios']] as $valor => [$nombre, $desc])
+                    <label class="cursor-pointer">
+                        <input type="radio" name="puesto" value="{{ $valor }}" data-nombre="{{ $nombre }}" class="peer sr-only" {{ $valor === 'mesero' ? 'checked' : '' }}>
+                        <div class="card p-4 h-full transition-colors peer-focus-visible:outline-2 peer-focus-visible:outline-hueso">
+                            <p class="font-medium">{{ $nombre }}</p>
+                            <p class="text-xs text-humo mt-1">{{ $desc }}</p>
+                        </div>
+                    </label>
+                @endforeach
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label for="email" class="block text-sm mb-1.5">Usuario o correo</label>
+                    <input id="email" type="text" name="email" required class="input" placeholder="pedro@comandapro.com">
+                </div>
+                <div>
+                    <label for="password" class="block text-sm mb-1.5">Contraseña</label>
+                    <input id="password" type="password" name="password" required class="input" placeholder="Tu contraseña">
                 </div>
             </div>
-
-            <div class="relative z-10 flex justify-between items-center text-xs text-slate-500">
-                <span>ComandaPro Enterprise • Versión 4.2.0</span>
-                <span>© 2026 Todos los derechos reservados.</span>
-            </div>
-        </div>
-
-        <!-- Formulario de Inicio de Sesión -->
-        <div class="p-10 flex flex-col justify-between bg-slate-50/50">
-            <div>
-                <h3 class="text-2xl font-bold text-slate-900">Bienvenido de nuevo</h3>
-                <p class="text-sm text-slate-500 mt-1">Selecciona tu puesto para ingresar al punto de venta o administración.</p>
-
-                <form action="{{ route('login.post') }}" method="POST" class="mt-8 space-y-6">
-                    <!-- @csrf es obligatorio en Laravel para seguridad de formularios -->
-                    @csrf
-                    <input type="hidden" name="puesto" id="puesto_input" value="mesero">
-
-                    <div>
-                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Puesto de Trabajo</label>
-                        <div class="grid grid-cols-2 gap-4">
-                            <!-- Opción Mesero -->
-                            <div onclick="seleccionarPuesto('mesero')" id="card-mesero" class="cursor-pointer border-2 border-blue-600 bg-white p-4 rounded-2xl shadow-sm transition relative">   
-                                <div class="bg-blue-100 text-blue-600 w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg mb-3">🪑</div>
-                                <h4 class="font-bold text-slate-800 text-sm">Mesero</h4>
-                                <p class="text-xs text-slate-400 mt-1">Toma pedidos desde salón, envía comandas y gestiona mesas en tiempo real.</p>
-                            </div>
-
-                            <!-- Opción Administrador -->
-                            <div onclick="seleccionarPuesto('admin')" id="card-admin" class="cursor-pointer border-2 border-slate-200 bg-white p-4 rounded-2xl shadow-sm hover:border-slate-300 transition relative">
-                                <div class="w-3 h-3 rounded-full border border-slate-300 absolute top-3 right-3 hidden" id="dot-admin"></div>
-                                <div class="bg-slate-100 text-slate-600 w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg mb-3">⚙️</div>
-                                <h4 class="font-bold text-slate-800 text-sm">Administrador</h4>
-                                <p class="text-xs text-slate-400 mt-1">Configura el menú, controla finanzas, gestiona stock y analiza rendimiento.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 mb-2">Usuario o Correo Electrónico</label>
-                        <input type="text" name="email" value="mesero.pedro@comandapro.com" required class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm outline-none focus:border-blue-600">
-                    </div>
-
-                    <div>
-                        <div class="flex justify-between items-center mb-2">
-                            <label class="text-xs font-bold text-slate-600">Contraseña de Acceso</label>
-                            <a href="#" class="text-xs font-bold text-blue-600 hover:underline">¿La olvidaste?</a>
-                        </div>
-                        <input type="password" name="password" value="••••••••••••" required class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm outline-none focus:border-blue-600">
-                    </div>
-
-                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-600/30 transition">
-                        Iniciar Sesión
-                    </button>
-                </form>
-            </div>
-        </div>
-
-    </div>
+            <button type="submit" class="btn btn-primary w-full py-3">Entrar</button>
+        </form>
+    </section>
 
     <script>
-        function seleccionarPuesto(puesto) {
-            document.getElementById('puesto_input').value = puesto;
-            if (puesto === 'mesero') {
-                document.getElementById('card-mesero').className = "cursor-pointer border-2 border-blue-600 bg-white p-4 rounded-2xl shadow-sm transition relative";
-                document.getElementById('card-admin').className = "cursor-pointer border-2 border-slate-200 bg-white p-4 rounded-2xl shadow-sm transition relative";
-                document.getElementById('dot-mesero').classList.remove('hidden');
-                document.getElementById('dot-admin').classList.add('hidden');
-            } else {
-                document.getElementById('card-admin').className = "cursor-pointer border-2 border-blue-600 bg-white p-4 rounded-2xl shadow-sm transition relative";
-                document.getElementById('card-mesero').className = "cursor-pointer border-2 border-slate-200 bg-white p-4 rounded-2xl shadow-sm transition relative";
-                document.getElementById('dot-admin').classList.remove('hidden');
-                document.getElementById('dot-mesero').classList.add('hidden');
-            }
-        }
+        // Al cambiar de puesto, muestra su nombre con el efecto de degradado
+        const titulo = document.getElementById('puesto-titulo');
+        document.querySelectorAll('input[name="puesto"]').forEach((radio) => {
+            radio.addEventListener('change', () => {
+                titulo.textContent = radio.dataset.nombre;
+                titulo.classList.remove('is-animando');
+                void titulo.offsetWidth; // reinicia la animación si se vuelve a elegir
+                titulo.classList.add('is-animando');
+            });
+        });
     </script>
 </body>
 </html>

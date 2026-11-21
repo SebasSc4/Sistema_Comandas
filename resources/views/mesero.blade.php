@@ -1,177 +1,271 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mesero - ComandaPro</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-</head>
-<body class="bg-slate-50 min-h-screen flex text-slate-800">
+@extends('layouts.panel')
+@section('rol', 'Mesero')
+@section('usuario', 'Pedro Gómez')
+@section('iniciales', 'PG')
+@section('titulo-inicial', 'Mis mesas')
 
-    <!-- Menú Lateral -->
-    <aside class="w-64 bg-white border-r border-slate-200 p-6 flex flex-col justify-between">
-        <div>
-            <div class="flex items-center space-x-3 mb-10">
-                <div class="bg-blue-600 p-2 rounded-xl text-white font-bold">🍳</div>
-                <span class="text-xl font-extrabold text-slate-900">ComandaPro</span>
+@php
+    $mesas = [
+        ['n' => 1, 'estado' => 'libre',   'personas' => 2, 'consumo' => null],
+        ['n' => 2, 'estado' => 'libre',   'personas' => 4, 'consumo' => null],
+        ['n' => 3, 'estado' => 'cobrar',  'personas' => 3, 'consumo' => 385],
+        ['n' => 4, 'estado' => 'ocupada', 'personas' => 4, 'consumo' => 540],
+        ['n' => 5, 'estado' => 'cobrar',  'personas' => 2, 'consumo' => 260],
+        ['n' => 6, 'estado' => 'ocupada', 'personas' => 6, 'consumo' => 910],
+    ];
+    $etiqueta = ['libre' => 'Libre', 'ocupada' => 'Ocupada', 'cobrar' => 'Por cobrar'];
+    $platillos = [['Tacos de Ribeye (3 piezas)', 'Ribeye en tortilla de maíz artesanal', 220], ['Costillas BBQ', 'Media tira con papas', 260], ['Quesadilla de arrachera', 'Queso Oaxaca y arrachera', 165]];
+    $subtotal = 440; $iva = $subtotal * 0.16;
+    // Datos simulados del plano (los mismos que usa el admin). Cuando exista la base, vendrán de una consulta.
+    $mesasPlano = [
+        ['id' => 1, 'nombre' => 'Mesa 1', 'personas' => 2, 'zona' => 'Salón',   'estado' => 'libre',   'x' => 40,  'y' => 40],
+        ['id' => 2, 'nombre' => 'Mesa 2', 'personas' => 4, 'zona' => 'Salón',   'estado' => 'libre',   'x' => 200, 'y' => 40],
+        ['id' => 3, 'nombre' => 'Mesa 3', 'personas' => 3, 'zona' => 'Salón',   'estado' => 'cobrar',  'x' => 360, 'y' => 40],
+        ['id' => 4, 'nombre' => 'Mesa 4', 'personas' => 4, 'zona' => 'Salón',   'estado' => 'ocupada', 'x' => 40,  'y' => 180],
+        ['id' => 5, 'nombre' => 'Mesa 5', 'personas' => 2, 'zona' => 'Terraza', 'estado' => 'cobrar',  'x' => 200, 'y' => 180],
+        ['id' => 6, 'nombre' => 'Mesa 6', 'personas' => 6, 'zona' => 'Terraza', 'estado' => 'ocupada', 'x' => 360, 'y' => 180],
+    ];
+@endphp
+
+@section('nav')
+    <button class="nav-item is-active" data-go="mesas">Mis mesas</button>
+    <button class="nav-item" data-go="plano">Plano del salón</button>
+    <button class="nav-item" data-go="comanda">Nueva comanda</button>
+    <button class="nav-item" data-go="activas">Comandas activas</button>
+@endsection
+
+@section('contenido')
+<section data-panel="mesas" data-titulo="Mis mesas" class="space-y-6">
+    <div class="grid grid-cols-4 gap-4">
+        @foreach ([['Mesas totales', count($mesas), ''], ['Ocupadas', 2, 'ocupada'], ['Por cobrar', 2, 'cobrar'], ['Libres', 2, 'libre']] as [$txt, $val, $est])
+            <div class="card p-5" @if($est) data-estado="{{ $est }}" @endif>
+                <p class="text-sm text-humo">{{ $txt }}</p>
+                <p class="num text-5xl font-bold mt-1" @if($est) style="color: var(--c)" @endif>{{ $val }}</p>
             </div>
+        @endforeach
+    </div>
+    <div class="grid grid-cols-3 gap-4">
+        @foreach ($mesas as $m)
+            <article class="mesa" data-estado="{{ $m['estado'] }}">
+                <div class="flex items-start justify-between">
+                    <h3 class="num text-4xl font-bold leading-none">Mesa {{ $m['n'] }}</h3>
+                    <span class="chip" data-estado="{{ $m['estado'] }}">{{ $etiqueta[$m['estado']] }}</span>
+                </div>
+                <p class="text-sm text-humo">{{ $m['personas'] }} comensales @if($m['consumo']) · <span class="text-hueso font-medium">${{ number_format($m['consumo'], 2) }}</span> @endif</p>
+                <button class="btn {{ $m['estado'] === 'libre' ? 'btn-primary' : '' }}" data-go="{{ $m['estado'] === 'libre' ? 'comanda' : 'activas' }}">
+                    {{ $m['estado'] === 'libre' ? 'Abrir mesa' : ($m['estado'] === 'cobrar' ? 'Cobrar cuenta' : 'Ver comanda') }}
+                </button>
+            </article>
+        @endforeach
+    </div>
+</section>
 
-            <nav class="space-y-2">
-                <button onclick="mostrarModulo('mesas')" id="btn-mesas" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl bg-cyan-50 text-cyan-700 font-bold text-sm">
-                    <span>🪑</span> <span>Mis Mesas</span>
-                </button>
-                <button onclick="mostrarModulo('comanda')" id="btn-comanda" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-slate-100 text-slate-600 font-semibold text-sm">
-                    <span>➕</span> <span>Nueva Comanda</span>
-                </button>
-                <button onclick="mostrarModulo('activas')" id="btn-activas" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-slate-100 text-slate-600 font-semibold text-sm">
-                    <span>⏰</span> <span>Comandas Activas</span>
-                </button>
-            </nav>
+<section data-panel="plano" data-titulo="Plano del salón" class="space-y-6" hidden>
+    <div class="card p-4 flex flex-wrap items-center gap-3">
+        <div class="mr-auto">
+            <h3 class="text-2xl font-semibold">Plano del salón</h3>
+            <p id="plano-ayuda" class="text-sm text-humo">Pulsa Reacomodar para mover o juntar mesas.</p>
         </div>
+        <button id="btn-editar" class="btn btn-primary">Reacomodar</button>
+        <div id="barra-edicion" class="flex flex-wrap gap-2" hidden>
+            <button id="btn-juntar" class="btn">Juntar</button>
+            <button id="btn-separar" class="btn">Separar</button>
+            <button id="btn-cancelar" class="btn">Cancelar</button>
+            <button id="btn-guardar" class="btn btn-primary">Guardar</button>
+        </div>
+    </div>
 
-        <div class="bg-slate-100 p-3 rounded-2xl flex items-center space-x-3">
-            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200" class="w-10 h-10 rounded-full object-cover">
-            <div>
-                <h5 class="font-bold text-sm text-slate-900">Mesero Pedro</h5>
-                <p class="text-xs text-slate-500">Salón Principal</p>
-                <span class="text-[10px] text-emerald-600 font-bold block mt-1">• Turno Activo</span>
+    <div class="grid grid-cols-4 gap-6">
+        <div id="plano" class="col-span-3 card relative overflow-hidden touch-none"
+             style="height: 460px; background-image: radial-gradient(circle, var(--color-line) 1px, transparent 1px); background-size: 20px 20px;"></div>
+        <aside class="card p-5 space-y-3 self-start">
+            <h3 class="text-2xl font-semibold">Estados</h3>
+            <p><span class="chip" data-estado="libre">Libre</span></p>
+            <p><span class="chip" data-estado="ocupada">Ocupada</span></p>
+            <p><span class="chip" data-estado="cobrar">Por cobrar</span></p>
+            <p class="text-xs text-humo pt-3 border-t border-line">Puedes mover y juntar mesas. Para agregar o quitar mesas, pídeselo al administrador.</p>
+        </aside>
+    </div>
+</section>
+
+<section data-panel="comanda" data-titulo="Nueva comanda" class="grid grid-cols-3 gap-6" hidden>
+    <div class="col-span-2 space-y-4">
+        <div class="flex gap-2">
+            <button class="btn">Entradas</button>
+            <button class="btn btn-primary">Platos fuertes</button>
+            <button class="btn">Bebidas</button>
+        </div>
+        @foreach ($platillos as [$nombre, $desc, $precio])
+            <div class="card p-4 flex items-center justify-between">
+                <div>
+                    <h3 class="text-xl font-semibold">{{ $nombre }}</h3>
+                    <p class="text-sm text-humo">{{ $desc }}</p>
+                    <p class="num text-xl mt-1">${{ number_format($precio, 2) }}</p>
+                </div>
+                <button class="btn" aria-label="Agregar {{ $nombre }}">Agregar</button>
             </div>
+        @endforeach
+    </div>
+    <aside class="card p-6 flex flex-col justify-between">
+        <div>
+            <h3 class="text-2xl font-semibold border-b border-line pb-3 mb-4">Pedido de la mesa 4</h3>
+            <div class="flex justify-between text-sm"><span>2x Tacos de Ribeye</span><span>${{ number_format($subtotal, 2) }}</span></div>
+            <textarea class="input mt-4" rows="3" placeholder="Notas para cocina (sin cebolla, término de la carne…)"></textarea>
+        </div>
+        <div class="pt-4 mt-4 border-t border-line space-y-1 text-sm">
+            <div class="flex justify-between text-humo"><span>Subtotal</span><span>${{ number_format($subtotal, 2) }}</span></div>
+            <div class="flex justify-between text-humo"><span>IVA 16%</span><span>${{ number_format($iva, 2) }}</span></div>
+            <div class="flex justify-between items-baseline pt-2"><span>Total</span><span class="num text-4xl font-bold">${{ number_format($subtotal + $iva, 2) }}</span></div>
+            <button class="btn btn-primary w-full mt-4 py-3">Enviar a cocina</button>
         </div>
     </aside>
+</section>
 
-    <!-- Área de Trabajo Principal -->
-    <main class="flex-1 p-8">
+<section data-panel="activas" data-titulo="Comandas activas" hidden>
+    <div class="card overflow-hidden">
+        <table class="w-full text-sm">
+            <thead class="border-b border-line"><tr><th class="th">Mesa</th><th class="th">Comanda</th><th class="th">Platillos</th><th class="th">Estado</th><th class="th">Total</th></tr></thead>
+            <tbody class="divide-y divide-line">
+                @foreach ([[12, 302, '3x Tacos de Ribeye · sin cebolla', 'ocupada', 'Preparando', 220], [4, 298, '2x Tacos de Ribeye', 'libre', 'Listo', 440]] as [$mesa, $folio, $detalle, $est, $txt, $total])
+                    <tr><td class="px-4 py-3 font-medium">Mesa {{ $mesa }}</td><td class="px-4 py-3 text-humo">#{{ $folio }}</td><td class="px-4 py-3">{{ $detalle }}</td>
+                        <td class="px-4 py-3"><span class="chip" data-estado="{{ $est }}">{{ $txt }}</span></td><td class="px-4 py-3">${{ number_format($total, 2) }}</td></tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+</section>
 
-        <!-- Header -->
-        <header class="flex justify-between items-center mb-8">
-            <div>
-                <h1 id="titulo" class="text-2xl font-extrabold text-slate-900">Mis Mesas Asignadas</h1>
-                <p id="subtitulo" class="text-xs text-slate-500">Gestión de mesas en salón principal</p>
-            </div>
-            <div class="flex items-center space-x-4">
-                <span class="bg-emerald-100 text-emerald-700 text-xs px-3 py-1.5 rounded-full font-bold">• Cocina Conectada</span>
-                <a href="{{ route('login') }}" class="p-2 bg-slate-100 rounded-xl hover:bg-slate-200 text-xs font-bold">🚪 Salir</a>
-            </div>
-        </header>
+<script>
+    // ===== Plano de mesas (mesero: solo mover, juntar y separar) =====
+    const inicial = @json($mesasPlano);
+    const GRID = 20, W = 112, H = 84, CLAVE = 'comandapro.plano';
 
-        <!-- CAPTURA 2: MIS MESAS -->
-        <div id="mod-mesas" class="space-y-6">
-            <div class="grid grid-cols-4 gap-6">
-                <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
-                    <p class="text-xs text-slate-400 font-bold">Mesas Totales</p>
-                    <h3 class="text-2xl font-black text-slate-800 mt-1">6 Mesas</h3>
-                </div>
-                <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
-                    <p class="text-xs text-slate-400 font-bold">Activas (Ocupadas)</p>
-                    <h3 class="text-2xl font-black text-red-500 mt-1">2 Activas</h3>
-                </div>
-                <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
-                    <p class="text-xs text-slate-400 font-bold">Por Cobrar</p>
-                    <h3 class="text-2xl font-black text-blue-600 mt-1">2 Cuentas</h3>
-                </div>
-                <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
-                    <p class="text-xs text-slate-400 font-bold">Libres</p>
-                    <h3 class="text-2xl font-black text-emerald-500 mt-1">2 Libres</h3>
-                </div>
-            </div>
+    const $ = (id) => document.getElementById(id);
+    const plano = $('plano');
+    const clonar = (o) => JSON.parse(JSON.stringify(o));
+    const ajustar = (v) => Math.round(v / GRID) * GRID;
+    const limitar = (v, min, max) => Math.max(min, Math.min(v, max));
 
-            <div class="grid grid-cols-3 gap-6 pt-4">
-                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                    <div class="flex justify-between items-center mb-2">
-                        <h4 class="font-bold text-slate-800">Mesa 1</h4>
-                        <span class="bg-emerald-100 text-emerald-700 text-xs px-2.5 py-1 rounded-full font-bold">Libre</span>
-                    </div>
-                    <p class="text-xs text-slate-400 mb-6">Comensales: 2 Personas</p>
-                    <button onclick="mostrarModulo('comanda')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl text-sm">Nueva Comanda</button>
-                </div>
-                <div class="bg-white p-6 rounded-2xl border-2 border-blue-600 shadow-md">
-                    <div class="flex justify-between items-center mb-2">
-                        <h4 class="font-bold text-slate-800">Mesa 4</h4>
-                        <span class="bg-red-100 text-red-600 text-xs px-2.5 py-1 rounded-full font-bold">Ocupada</span>
-                    </div>
-                    <p class="text-xs text-slate-400">Comensales: 4 Personas</p>
-                    <p class="text-xs font-bold text-slate-700 mt-1 mb-4">Consumo: $540.00</p>
-                    <button onclick="mostrarModulo('activas')" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl text-sm">Ver Comanda</button>
-                </div>
-            </div>
-        </div>
+    // TEMPORAL: se guarda en el navegador (el mismo plano que ve el admin en este equipo).
+    // Cuando exista la base, aquí va la llamada al servidor.
+    function cargar() {
+        try { const s = localStorage.getItem(CLAVE); if (s) return JSON.parse(s); } catch (e) {}
+        return clonar(inicial);
+    }
+    function persistir() {
+        try { localStorage.setItem(CLAVE, JSON.stringify(mesas)); } catch (e) {}
+    }
 
-        <!-- CAPTURA 3: NUEVA COMANDA -->
-        <div id="mod-comanda" class="hidden grid grid-cols-3 gap-8">
-            <div class="col-span-2 space-y-4">
-                <div class="flex space-x-3">
-                    <button class="px-4 py-2 bg-slate-200 rounded-xl text-xs font-bold text-slate-600">Entradas</button>
-                    <button class="px-4 py-2 bg-blue-600 rounded-xl text-xs font-bold text-white shadow-md">Platos Fuertes</button>
-                    <button class="px-4 py-2 bg-slate-200 rounded-xl text-xs font-bold text-slate-600">Bebidas</button>
-                </div>
-                <div class="bg-white p-4 rounded-2xl border border-slate-200 flex justify-between items-center">
-                    <div>
-                        <h4 class="font-bold text-slate-800 text-sm">Tacos de Ribeye (3 piezas)</h4>
-                        <p class="text-xs text-slate-400">Corte premium de ribeye en tortilla de maíz taquera artesanal.</p>
-                        <span class="text-xs font-bold text-blue-600 mt-1 block">$220.00</span>
-                    </div>
-                    <button class="w-8 h-8 bg-cyan-100 text-cyan-700 font-bold rounded-xl">+</button>
-                </div>
-            </div>
+    let mesas = cargar();
+    let guardado = clonar(mesas);
+    let editando = false;
+    let sel = new Set();
+    let arrastre = null;
 
-            <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between">
-                <div>
-                    <h3 class="font-extrabold text-slate-800 border-b pb-4 mb-4">Detalle del Pedido (Mesa 4)</h3>
-                    <div class="flex justify-between text-xs font-bold text-slate-800 mb-2">
-                        <span>2x Tacos de Ribeye</span>
-                        <span>$440.00</span>
-                    </div>
-                    <textarea placeholder="Notas de la comanda..." class="w-full mt-4 p-3 border border-slate-200 rounded-xl bg-slate-50 text-xs outline-none"></textarea>
-                </div>
-                <div class="pt-4 border-t border-slate-100">
-                    <div class="flex justify-between text-sm font-extrabold text-slate-900 mb-4">
-                        <span>Total Estimado</span>
-                        <span class="text-blue-600">$649.60</span>
-                    </div>
-                    <button class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl text-sm">Enviar Comanda a Cocina</button>
-                </div>
-            </div>
-        </div>
+    const ayuda = (t) => ($('plano-ayuda').textContent = t);
+    const unica = () => (sel.size === 1 ? mesas.find((m) => m.id === [...sel][0]) : null);
+    const siguienteId = () => Math.max(0, ...mesas.map((m) => m.id)) + 1;
 
-        <!-- CAPTURA 4: COMANDAS ACTIVAS -->
-        <div id="mod-activas" class="hidden">
-            <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-                <table class="w-full text-left text-xs">
-                    <thead class="bg-slate-50 text-slate-400 font-bold border-b border-slate-200">
-                        <tr>
-                            <th class="p-4">Mesa</th>
-                            <th class="p-4">Comanda</th>
-                            <th class="p-4">Platillos</th>
-                            <th class="p-4">Estado</th>
-                            <th class="p-4">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
-                        <tr>
-                            <td class="p-4 font-bold">Mesa 12</td>
-                            <td class="p-4 text-slate-400">#302</td>
-                            <td class="p-4">3x Tacos de Ribeye • Sin cebolla</td>
-                            <td class="p-4"><span class="bg-cyan-100 text-cyan-700 px-2.5 py-1 rounded-full text-[10px] font-bold">Preparando</span></td>
-                            <td class="p-4 font-bold">$220.00</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+    function pintar(m) {
+        const el = document.createElement('div');
+        el.className = 'mesa absolute select-none' + (editando ? ' cursor-grab' : '');
+        el.dataset.estado = m.estado;
+        el.dataset.id = m.id;
+        Object.assign(el.style, { left: m.x + 'px', top: m.y + 'px', width: (m.w || W) + 'px', height: H + 'px', padding: '10px', gap: '4px' });
+        const titulo = document.createElement('h4');
+        titulo.className = 'num text-2xl font-bold leading-none';
+        titulo.textContent = m.nombre;
+        const detalle = document.createElement('p');
+        detalle.className = 'text-xs text-humo';
+        detalle.textContent = m.personas + ' pers. · ' + m.zona;
+        el.append(titulo, detalle);
+        return el;
+    }
 
-    </main>
+    function resaltar() {
+        document.querySelectorAll('#plano .mesa').forEach((n) => {
+            const on = sel.has(Number(n.dataset.id));
+            n.classList.toggle('ring-2', on);
+            n.classList.toggle('ring-acento', on);
+        });
+    }
 
-    <!-- Script para alternar los módulos dinámicamente -->
-    <script>
-        function mostrarModulo(nombre) {
-            ['mesas', 'comanda', 'activas'].forEach(m => {
-                document.getElementById('mod-' + m).classList.add('hidden');
-                document.getElementById('btn-' + m).className = "w-full flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-slate-100 text-slate-600 font-semibold text-sm";
-            });
+    function render() {
+        plano.replaceChildren(...mesas.map(pintar));
+        resaltar();
+        $('btn-editar').hidden = editando;
+        $('barra-edicion').hidden = !editando;
+    }
 
-            document.getElementById('mod-' + nombre).classList.remove('hidden');
-            document.getElementById('btn-' + nombre).className = "w-full flex items-center space-x-3 px-4 py-3 rounded-xl bg-cyan-50 text-cyan-700 font-bold text-sm";
-        }
-    </script>
-</body>
-</html>
+    function terminarEdicion(texto) {
+        editando = false;
+        sel = new Set();
+        render();
+        ayuda(texto);
+    }
+
+    // Arrastrar (solo en modo reacomodar)
+    plano.addEventListener('pointerdown', (e) => {
+        if (!editando) return;
+        const el = e.target.closest('.mesa');
+        if (!el) { sel = new Set(); resaltar(); return; }
+        const id = Number(el.dataset.id);
+        if (e.shiftKey) { sel.has(id) ? sel.delete(id) : sel.add(id); }
+        else if (!sel.has(id)) { sel = new Set([id]); }
+        resaltar();
+        const m = mesas.find((x) => x.id === id);
+        const r = plano.getBoundingClientRect();
+        arrastre = { m, el, dx: e.clientX - r.left - m.x, dy: e.clientY - r.top - m.y };
+        el.setPointerCapture(e.pointerId);
+    });
+    plano.addEventListener('pointermove', (e) => {
+        if (!arrastre) return;
+        const r = plano.getBoundingClientRect();
+        const { m, el, dx, dy } = arrastre;
+        m.x = limitar(ajustar(e.clientX - r.left - dx), 0, r.width - (m.w || W));
+        m.y = limitar(ajustar(e.clientY - r.top - dy), 0, r.height - H);
+        el.style.left = m.x + 'px';
+        el.style.top = m.y + 'px';
+    });
+    plano.addEventListener('pointerup', () => { arrastre = null; });
+
+    // Botones
+    $('btn-editar').addEventListener('click', () => {
+        editando = true;
+        render();
+        ayuda('Arrastra las mesas. Con Shift + clic seleccionas varias para juntarlas.');
+    });
+    $('btn-guardar').addEventListener('click', () => { guardado = clonar(mesas); persistir(); terminarEdicion('Plano guardado.'); });
+    $('btn-cancelar').addEventListener('click', () => { mesas = clonar(guardado); terminarEdicion('Cambios descartados.'); });
+
+    $('btn-juntar').addEventListener('click', () => {
+        const grupo = mesas.filter((m) => sel.has(m.id));
+        if (grupo.length < 2) { ayuda('Selecciona 2 o más mesas con Shift + clic para juntarlas.'); return; }
+        const id = siguienteId();
+        const estado = grupo.some((m) => m.estado === 'ocupada') ? 'ocupada' : grupo.some((m) => m.estado === 'cobrar') ? 'cobrar' : 'libre';
+        mesas = mesas.filter((m) => !sel.has(m.id));
+        mesas.push({
+            id, estado, zona: grupo[0].zona,
+            nombre: 'Mesa ' + grupo.map((m) => m.nombre.replace(/^Mesa\s*/i, '')).join('+'),
+            personas: grupo.reduce((t, m) => t + Number(m.personas), 0),
+            x: Math.min(...grupo.map((m) => m.x)), y: Math.min(...grupo.map((m) => m.y)),
+            w: W * grupo.length, unidas: grupo,
+        });
+        sel = new Set([id]);
+        render();
+        ayuda('Mesas juntadas.');
+    });
+
+    $('btn-separar').addEventListener('click', () => {
+        const m = unica();
+        if (!m || !m.unidas) { ayuda('Selecciona una mesa juntada para separarla.'); return; }
+        mesas = mesas.filter((x) => x.id !== m.id);
+        m.unidas.forEach((u, i) => { u.x = limitar(m.x + i * (W + 8), 0, plano.clientWidth - W); u.y = m.y; mesas.push(u); });
+        sel = new Set();
+        render();
+        ayuda('Mesas separadas.');
+    });
+
+    render();
+</script>
+@endsection
