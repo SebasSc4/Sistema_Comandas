@@ -41,7 +41,15 @@
 
     <!-- Área de Trabajo Principal -->
     <main class="flex-1 p-8">
-
+@if (session('success'))
+    <div class="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 font-bold rounded-2xl flex items-center justify-between shadow-sm">
+        <div class="flex items-center space-x-2">
+            <span>✅</span>
+            <span class="text-sm">{{ session('success') }}</span>
+        </div>
+        <button onclick="this.parentElement.remove()" class="text-emerald-500 hover:text-emerald-700 font-bold text-xs">✕</button>
+    </div>
+@endif
         <!-- Header -->
         <header class="flex justify-between items-center mb-8">
             <div>
@@ -113,25 +121,33 @@
                     <button class="w-8 h-8 bg-cyan-100 text-cyan-700 font-bold rounded-xl">+</button>
                 </div>
             </div>
+<!-- FORMULARIO DE COMANDA CONECTADO AL BACKEND -->
+            <form action="/enviar-comanda" method="POST" class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                @csrf
 
-            <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                <!-- Datos ocultos para simular el pedido al Controlador -->
+                <input type="hidden" name="mesa_id" value="4">
+                <input type="hidden" name="total" value="440.00">
+                <input type="hidden" name="productos[0][id]" value="1"> <!-- 1 = ID de Tacos de Ribeye -->
+                <input type="hidden" name="productos[0][cantidad]" value="2">
+
                 <div>
                     <h3 class="font-extrabold text-slate-800 border-b pb-4 mb-4">Detalle del Pedido (Mesa 4)</h3>
                     <div class="flex justify-between text-xs font-bold text-slate-800 mb-2">
                         <span>2x Tacos de Ribeye</span>
                         <span>$440.00</span>
                     </div>
-                    <textarea placeholder="Notas de la comanda..." class="w-full mt-4 p-3 border border-slate-200 rounded-xl bg-slate-50 text-xs outline-none"></textarea>
+                    <!-- El textarea sí envía las notas reales -->
+                    <textarea name="productos[0][notas]" placeholder="Notas de la comanda (ej. sin cebolla)..." class="w-full mt-4 p-3 border border-slate-200 rounded-xl bg-slate-50 text-xs outline-none"></textarea>
                 </div>
                 <div class="pt-4 border-t border-slate-100">
                     <div class="flex justify-between text-sm font-extrabold text-slate-900 mb-4">
                         <span>Total Estimado</span>
-                        <span class="text-blue-600">$649.60</span>
+                        <span class="text-blue-600">$440.00</span>
                     </div>
-                    <button class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl text-sm">Enviar Comanda a Cocina</button>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl text-sm">Enviar Comanda a Cocina</button>
                 </div>
-            </div>
-        </div>
+            </form>
 
         <!-- CAPTURA 4: COMANDAS ACTIVAS -->
         <div id="mod-activas" class="hidden">

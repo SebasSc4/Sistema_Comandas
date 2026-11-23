@@ -26,3 +26,8 @@ Route::get('/mesero', function () {
 Route::get('/admin', function () {
     return view('admin');
 })->name('admin');
+
+use App\Http\Controllers\ComandaController;
+
+// Cuando el formulario envíe datos por POST, ejecutará la función store
+Route::post('/enviar-comanda', [ComandaController::class, 'store']);
